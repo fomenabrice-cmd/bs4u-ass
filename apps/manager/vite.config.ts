@@ -42,8 +42,10 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         runtimeCaching: [
           {
+            // GET only — POST auth requests must bypass the SW entirely
             urlPattern: /^https:\/\/.*\.supabase\.co\/.*/i,
             handler: "NetworkFirst",
+            method: "GET",
             options: {
               cacheName: "supabase-api",
               expiration: { maxEntries: 50, maxAgeSeconds: 300 },
