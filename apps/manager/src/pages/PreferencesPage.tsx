@@ -2,7 +2,9 @@ import { useState, useEffect } from "react";
 import {
   Users, Banknote, Smartphone, Clock, Plus, Edit2, Save,
   X, Check, Loader2, ChevronDown, AlertCircle, Trash2,
-  UserCheck, Shield, Signal, Wallet, QrCode
+  UserCheck, Shield, Signal, Wallet, QrCode,
+  Building2, RefreshCw, Eye, EyeOff, Copy, CheckCircle,
+  MapPin, CalendarDays
 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { supabase } from "../lib/supabase";
@@ -30,13 +32,16 @@ const ROLE_COLORS: Record<Role, string> = {
 };
 
 type Member = {
-  id: string;        // profiles.id = auth.uid
+  id: string;
   full_name: string;
   phone: string | null;
+  city: string | null;
+  country: string | null;
   avatar_url: string | null;
   role: Role;
-  role_id: string;   // user_roles.id
+  role_id: string;
   is_active: boolean;
+  granted_at: string | null;
 };
 
 type CashRegister = {
@@ -154,6 +159,8 @@ function AddBtn({ onClick, label }: { onClick: () => void; label: string }) {
 
 // ─── Tabs content ─────────────────────────────────────────────────────────────
 
+const ROLE_ORDER: Role[] = ["super_admin", "admin", "manager", "secretary", "accountant", "member", "viewer", "discover"];
+
 function MembresTab({ orgId }: { orgId: string }) {
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
@@ -165,20 +172,24 @@ function MembresTab({ orgId }: { orgId: string }) {
 
   async function load() {
     setLoading(true);
+    // Use !user_roles_user_id_fkey hint to disambiguate — user_roles has two FKs to profiles
     const { data } = await supabase
       .from("user_roles")
-      .select("id, user_id, role, is_active, profiles(full_name, phone, avatar_url)")
+      .select("id, user_id, role, is_active, granted_at, profiles!user_roles_user_id_fkey(full_name, phone, avatar_url, city, country)")
       .eq("organization_id", orgId)
       .order("created_at");
     if (data) {
       setMembers(data.map((r: any) => ({
         id: r.user_id,
-        full_name: r.profiles?.full_name ?? "—",
-        phone: r.profiles?.phone ?? null,
+        full_name: r.profiles?.full_name ?? "Membre",
+        phone: r.profiles?.phone || null,
+        city: r.profiles?.city || null,
+        country: r.profiles?.country || null,
         avatar_url: r.profiles?.avatar_url ?? null,
         role: r.role as Role,
         role_id: r.id,
         is_active: r.is_active,
+        granted_at: r.granted_at ?? null,
       })));
     }
     setLoading(false);
@@ -197,61 +208,105 @@ function MembresTab({ orgId }: { orgId: string }) {
     load();
   }
 
+  const fmtDate = (d: string) => new Date(d).toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" });
+
   if (loading) return <div className="flex justify-center py-16"><Loader2 className="w-6 h-6 animate-spin text-[#075B32]" /></div>;
+
+  const sorted = [...members].sort((a, b) => ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role));
 
   return (
     <div className="space-y-3">
-      {members.map(m => (
-        <Card key={m.role_id}>
-          <div className="flex items-center gap-3">
-            <Initials name={m.full_name} url={m.avatar_url} />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-medium text-[#17231C] text-sm">{m.full_name}</span>
-                <Badge role={m.role} />
-                {!m.is_active && (
-                  <span className="text-xs text-red-500 font-medium">Inactif</span>
-                )}
-              </div>
-              {m.phone && <p className="text-xs text-[#A0ADA5] mt-0.5">{m.phone}</p>}
-            </div>
+      {/* Compteur */}
+      <p className="text-xs font-medium text-[#66736A] uppercase tracking-wide mb-1">
+        {members.length} membre{members.length !== 1 ? "s" : ""}
+      </p>
 
-            {editId === m.role_id ? (
-              <div className="flex items-center gap-2">
-                <select
-                  value={editRole}
-                  onChange={e => setEditRole(e.target.value as Role)}
-                  className="text-sm border border-[#E2E8E3] rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#075B32]"
-                >
-                  {(Object.entries(ROLE_LABELS) as [Role, string][]).map(([v, l]) => (
-                    <option key={v} value={v}>{l}</option>
-                  ))}
-                </select>
-                <button onClick={() => saveRole(m.role_id)} disabled={saving}
-                  className="p-1.5 bg-[#075B32] text-white rounded-lg hover:bg-[#063A22] disabled:opacity-50">
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                </button>
-                <button onClick={() => setEditId(null)}
-                  className="p-1.5 text-[#A0ADA5] hover:text-[#17231C] rounded-lg">
-                  <X className="w-4 h-4" />
-                </button>
+      {sorted.map(m => (
+        <Card key={m.role_id}>
+          <div className={m.is_active ? "" : "opacity-60"}>
+            <div className="flex items-start gap-4">
+              {/* Avatar avec indicateur actif/inactif */}
+              <div className="relative shrink-0 mt-0.5">
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+                  m.avatar_url ? "" : "bg-[#075B32]"
+                }`}>
+                  {m.avatar_url
+                    ? <img src={m.avatar_url} className="w-10 h-10 rounded-full object-cover" alt={m.full_name} />
+                    : <span className="text-white text-sm font-bold">
+                        {m.full_name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
+                      </span>
+                  }
+                </div>
+                <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${
+                  m.is_active ? "bg-emerald-400" : "bg-red-400"
+                }`} />
               </div>
-            ) : (
-              <div className="flex items-center gap-1">
-                <button onClick={() => { setEditId(m.role_id); setEditRole(m.role); }}
-                  className="p-1.5 text-[#A0ADA5] hover:text-[#075B32] rounded-lg transition-colors" title="Changer le rôle">
-                  <Shield className="w-4 h-4" />
-                </button>
-                <button onClick={() => toggleActive(m.role_id, m.is_active)}
-                  className={`p-1.5 rounded-lg transition-colors ${m.is_active ? "text-[#A0ADA5] hover:text-red-500" : "text-red-400 hover:text-[#075B32]"}`}
-                  title={m.is_active ? "Désactiver" : "Activer"}>
-                  <UserCheck className="w-4 h-4" />
-                </button>
+
+              {/* Infos principales */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                  <span className="font-semibold text-[#17231C] text-sm">{m.full_name}</span>
+                  <Badge role={m.role} />
+                  {!m.is_active && (
+                    <span className="text-xs text-red-600 font-medium bg-red-50 px-2 py-0.5 rounded-full border border-red-100">
+                      Inactif
+                    </span>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-x-4 gap-y-0.5">
+                  {m.phone && (
+                    <span className="flex items-center gap-1 text-xs text-[#66736A]">
+                      <Smartphone className="w-3 h-3 shrink-0" />{m.phone}
+                    </span>
+                  )}
+                  {(m.city || m.country) && (
+                    <span className="flex items-center gap-1 text-xs text-[#66736A]">
+                      <MapPin className="w-3 h-3 shrink-0" />{[m.city, m.country].filter(Boolean).join(", ")}
+                    </span>
+                  )}
+                  {m.granted_at && (
+                    <span className="flex items-center gap-1 text-xs text-[#A0ADA5]">
+                      <CalendarDays className="w-3 h-3 shrink-0" />Depuis le {fmtDate(m.granted_at)}
+                    </span>
+                  )}
+                </div>
               </div>
-            )}
+
+              {/* Actions */}
+              {editId === m.role_id ? (
+                <div className="flex items-center gap-2 shrink-0">
+                  <select value={editRole} onChange={e => setEditRole(e.target.value as Role)}
+                    className="text-sm border border-[#E2E8E3] rounded-lg px-2 py-1.5 focus:outline-none focus:ring-2 focus:ring-[#075B32]">
+                    {(Object.entries(ROLE_LABELS) as [Role, string][]).map(([v, l]) => (
+                      <option key={v} value={v}>{l}</option>
+                    ))}
+                  </select>
+                  <button onClick={() => saveRole(m.role_id)} disabled={saving}
+                    className="p-1.5 bg-[#075B32] text-white rounded-lg hover:bg-[#063A22] disabled:opacity-50">
+                    {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  </button>
+                  <button onClick={() => setEditId(null)} className="p-1.5 text-[#A0ADA5] hover:text-[#17231C] rounded-lg">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1 shrink-0">
+                  <button onClick={() => { setEditId(m.role_id); setEditRole(m.role); }}
+                    className="p-1.5 text-[#A0ADA5] hover:text-[#075B32] rounded-lg transition-colors" title="Modifier le rôle">
+                    <Shield className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => toggleActive(m.role_id, m.is_active)}
+                    className={`p-1.5 rounded-lg transition-colors ${m.is_active ? "text-[#A0ADA5] hover:text-red-500" : "text-red-400 hover:text-[#075B32]"}`}
+                    title={m.is_active ? "Désactiver" : "Réactiver"}>
+                    <UserCheck className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </Card>
       ))}
+
       {members.length === 0 && (
         <div className="text-center py-12 text-[#A0ADA5]">
           <Users className="w-10 h-10 mx-auto mb-2 opacity-30" />
@@ -1104,7 +1159,7 @@ function HorairesTab({ orgId }: { orgId: string }) {
 
 // ─── Page principale ──────────────────────────────────────────────────────────
 
-type TabKey = "membres" | "caisses" | "momo" | "horaires" | "flotte" | "comptes";
+type TabKey = "membres" | "caisses" | "momo" | "horaires" | "flotte" | "comptes" | "agence";
 
 function FlotteTab({ orgId }: { orgId: string }) {
   const [settings, setSettings] = useState<FlotteSettings>(DEFAULT_FLOTTE);
@@ -1213,6 +1268,207 @@ function FlotteTab({ orgId }: { orgId: string }) {
   );
 }
 
+function genInviteCode(): string {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  return "BS-" + Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join("");
+}
+
+function AgenceTab({ orgId }: { orgId: string }) {
+  const { session, demoUser } = useAuth();
+  const [org, setOrg] = useState<any>(null);
+  const [role, setRole] = useState<Role | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [generating, setGenerating] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [form, setForm] = useState({ name: "", city: "", country: "", address: "", phone: "", email: "", website: "" });
+  const [visibleOnSignup, setVisibleOnSignup] = useState(false);
+
+  const isAdmin = role === "super_admin" || role === "admin";
+
+  // Re-run when orgId changes OR when auth resolves (session/demoUser arrive async)
+  useEffect(() => { load(); }, [orgId, session, demoUser]);
+
+  async function load() {
+    setLoading(true);
+    const userId = session?.user?.id;
+    const [{ data: orgData }, { data: roleData }] = await Promise.all([
+      supabase.from("organizations").select("*").eq("id", orgId).single(),
+      userId
+        ? supabase.from("user_roles").select("role").eq("organization_id", orgId).eq("user_id", userId).eq("is_active", true).single()
+        : Promise.resolve({ data: null }),
+    ]);
+    if (orgData) {
+      setOrg(orgData);
+      setForm({ name: orgData.name ?? "", city: orgData.city ?? "", country: orgData.country ?? "", address: orgData.address ?? "", phone: orgData.phone ?? "", email: orgData.email ?? "", website: orgData.website ?? "" });
+      setVisibleOnSignup(orgData.settings?.visible_on_signup ?? false);
+      // Auto-rotate code if older than 7 days or missing
+      const setAt = orgData.settings?.invite_code_set_at;
+      const isExpired = !setAt || Date.now() - new Date(setAt).getTime() > 7 * 24 * 3600 * 1000;
+      if (isExpired) await regenerateCode(orgData, true);
+    }
+    if (demoUser) setRole(demoUser.role as Role);
+    else if (roleData) setRole((roleData as any).role as Role);
+    setLoading(false);
+  }
+
+  async function regenerateCode(currentOrg?: any, silent = false) {
+    if (!silent) setGenerating(true);
+    const src = currentOrg ?? org;
+    const code = genInviteCode();
+    const settings = { ...(src?.settings ?? {}), invite_code_set_at: new Date().toISOString() };
+    await supabase.from("organizations").update({ invite_code: code, settings }).eq("id", orgId);
+    setOrg((prev: any) => ({ ...prev, invite_code: code, settings }));
+    if (!silent) setGenerating(false);
+  }
+
+  async function saveDetails() {
+    setSaving(true);
+    await supabase.from("organizations").update({ ...form, updated_at: new Date().toISOString() }).eq("id", orgId);
+    setSaving(false);
+  }
+
+  async function toggleVisibility(val: boolean) {
+    setVisibleOnSignup(val);
+    const settings = { ...(org?.settings ?? {}), visible_on_signup: val };
+    await supabase.from("organizations").update({ settings }).eq("id", orgId);
+    setOrg((prev: any) => ({ ...prev, settings }));
+  }
+
+  function copyCode() {
+    navigator.clipboard.writeText(org?.invite_code ?? "");
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
+  const setAt = org?.settings?.invite_code_set_at;
+  const expiresAt = setAt ? new Date(new Date(setAt).getTime() + 7 * 24 * 3600 * 1000) : null;
+  const daysLeft = expiresAt ? Math.max(0, Math.ceil((expiresAt.getTime() - Date.now()) / (24 * 3600 * 1000))) : null;
+
+  if (loading) return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-[#075B32]" /></div>;
+
+  return (
+    <div className="space-y-5">
+      {/* Code d'invitation */}
+      <Card>
+        <SectionTitle
+          title="Code d'invitation"
+          action={isAdmin ? (
+            <button onClick={() => regenerateCode()} disabled={generating}
+              className="flex items-center gap-1.5 text-sm text-[#075B32] font-medium hover:bg-[#E8F3EC] px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50">
+              <RefreshCw className={`w-4 h-4 ${generating ? "animate-spin" : ""}`} />
+              Générer nouveau code
+            </button>
+          ) : undefined}
+        />
+        <div className="flex items-center gap-3 mb-3">
+          <div className="flex-1 bg-[#F5F7F5] rounded-xl border border-[#E2E8E3] px-5 py-3.5 flex items-center justify-between">
+            <span className="text-2xl font-bold tracking-widest text-[#075B32] font-mono">
+              {org?.invite_code ?? "—"}
+            </span>
+            <button onClick={copyCode} className="p-2 rounded-lg hover:bg-[#E8F3EC] transition-colors" title="Copier">
+              {copied
+                ? <CheckCircle className="w-5 h-5 text-emerald-600" />
+                : <Copy className="w-5 h-5 text-[#66736A]" />
+              }
+            </button>
+          </div>
+        </div>
+        {daysLeft !== null && (
+          <p className="text-xs text-[#A0ADA5]">
+            Expire dans{" "}
+            <span className="font-semibold text-[#17231C]">{daysLeft} jour{daysLeft !== 1 ? "s" : ""}</span>
+            {" "}— régénéré automatiquement chaque semaine.
+          </p>
+        )}
+        <p className="text-xs text-[#A0ADA5] mt-1.5">
+          Partagez ce code sur la page d'inscription pour que les nouveaux membres rejoignent directement cette agence.
+        </p>
+      </Card>
+
+      {/* Visibilité sur la page d'inscription */}
+      <Card>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-sm font-semibold text-[#17231C]">Visible sur la page d'inscription</p>
+            <p className="text-xs text-[#A0ADA5] mt-0.5">
+              Les nouveaux utilisateurs peuvent trouver cette agence dans la liste sur la page de création de compte
+            </p>
+          </div>
+          {isAdmin ? (
+            <button
+              onClick={() => toggleVisibility(!visibleOnSignup)}
+              className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                visibleOnSignup
+                  ? "bg-[#075B32] text-white hover:bg-[#064d2a]"
+                  : "bg-[#F5F7F5] text-[#66736A] border border-[#E2E8E3] hover:bg-[#E8F3EC]"
+              }`}
+            >
+              {visibleOnSignup ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              {visibleOnSignup ? "Visible" : "Masquée"}
+            </button>
+          ) : (
+            <span className={`shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium ${visibleOnSignup ? "text-[#075B32]" : "text-[#A0ADA5]"}`}>
+              {visibleOnSignup ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+              {visibleOnSignup ? "Visible" : "Masquée"}
+            </span>
+          )}
+        </div>
+      </Card>
+
+      {/* Détails de l'agence */}
+      <Card>
+        <SectionTitle
+          title="Détails de l'agence"
+          action={isAdmin ? (
+            <button onClick={saveDetails} disabled={saving}
+              className="flex items-center gap-1.5 text-sm bg-[#075B32] text-white font-medium px-4 py-2 rounded-lg hover:bg-[#064d2a] transition-colors disabled:opacity-50">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              Enregistrer
+            </button>
+          ) : undefined}
+        />
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {(["name", "city", "country", "phone", "email", "website"] as const).map((key) => {
+            const labels: Record<string, string> = {
+              name: "Nom de l'agence", city: "Ville", country: "Pays",
+              phone: "Téléphone", email: "Email", website: "Site web",
+            };
+            return (
+              <div key={key}>
+                <label className="block text-xs font-medium text-[#66736A] mb-1">{labels[key]}</label>
+                {isAdmin ? (
+                  <input
+                    value={form[key]}
+                    onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))}
+                    className="w-full px-3 py-2 text-sm bg-[#F5F7F5] border border-[#E2E8E3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#075B32]/30"
+                    placeholder={labels[key]}
+                  />
+                ) : (
+                  <p className="text-sm text-[#17231C] px-3 py-2 bg-[#F5F7F5] rounded-lg border border-[#E2E8E3]">{form[key] || "—"}</p>
+                )}
+              </div>
+            );
+          })}
+          <div className="sm:col-span-2">
+            <label className="block text-xs font-medium text-[#66736A] mb-1">Adresse</label>
+            {isAdmin ? (
+              <input
+                value={form.address}
+                onChange={e => setForm(f => ({ ...f, address: e.target.value }))}
+                className="w-full px-3 py-2 text-sm bg-[#F5F7F5] border border-[#E2E8E3] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#075B32]/30"
+                placeholder="Adresse complète"
+              />
+            ) : (
+              <p className="text-sm text-[#17231C] px-3 py-2 bg-[#F5F7F5] rounded-lg border border-[#E2E8E3]">{form.address || "—"}</p>
+            )}
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 export function PreferencesPage() {
   const { session } = useAuth();
   const [activeTab, setActiveTab] = useState<TabKey>("membres");
@@ -1241,6 +1497,7 @@ export function PreferencesPage() {
     { key: "comptes",  label: "Comptes",        icon: Wallet },
     { key: "horaires", label: "Horaires",       icon: Clock },
     { key: "flotte",   label: "Flotte",         icon: Signal },
+    { key: "agence",   label: "Agence",         icon: Building2 },
   ];
 
   if (loadingOrg) return (
@@ -1280,6 +1537,7 @@ export function PreferencesPage() {
       {activeTab === "comptes"  && <ComptesTab  orgId={orgId} />}
       {activeTab === "horaires" && <HorairesTab orgId={orgId} />}
       {activeTab === "flotte"   && <FlotteTab   orgId={orgId} />}
+      {activeTab === "agence"   && <AgenceTab   orgId={orgId} />}
     </div>
   );
 }

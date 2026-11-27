@@ -1,0 +1,9 @@
+{
+  "buildCommand": "pnpm turbo build --filter=@bs4u/manager",
+  "outputDirectory": "apps/manager/dist",
+  "installCommand": "pnpm install",
+  "framework": null,
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

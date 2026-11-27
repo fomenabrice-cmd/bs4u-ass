@@ -54,3 +54,6 @@ desktop.ini
 *.p12
 *secrets*
 *credentials*
+
+.vercel
+.env*

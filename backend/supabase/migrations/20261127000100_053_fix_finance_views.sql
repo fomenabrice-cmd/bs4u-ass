@@ -1,5 +1,6 @@
--- Migration 053 : Correction des vues Finance avec données réelles
--- À appliquer manuellement : supabase db push OU via dashboard Supabase SQL Editor
+-- Migration 053 FINAL : Correction des vues Finance avec données réelles
+-- Révisé 2026-11-27 (Phase 3B) — LOCAL UNIQUEMENT, ne pas appliquer sans autorisation
+-- Corrections vs v1 : status 'calculated' (non 'validated'), discrepancy NULL, cast date corrigé
 
 -- 1. v_treasury_reconciliations : remplace stub par données réelles
 CREATE OR REPLACE VIEW public.v_treasury_reconciliations
@@ -30,8 +31,8 @@ SELECT
     SUM(mmt.commission_xaf) FILTER (WHERE mmt.status::text = 'completed'),
     0
   )::bigint                                                       AS total_commissions_xaf,
-  0::bigint                                                       AS discrepancy_xaf,
-  'validated'::text                                               AS status
+  NULL::bigint                                                    AS discrepancy_xaf,
+  'calculated'::text                                              AS status
 FROM public.mobile_money_transactions mmt
 LEFT JOIN public.mobile_money_accounts mma ON mma.id = mmt.account_id
 GROUP BY mmt.account_id, mmt.created_at::date, mma.account_name, mma.provider;
@@ -41,10 +42,7 @@ CREATE OR REPLACE VIEW public.v_journal_entries
   WITH (security_invoker = true) AS
 SELECT
   je.id,
-  COALESCE(
-    je.reference,
-    'JE-' || to_char(je.entry_date::timestamptz, 'YYYY') || '-' || substring(je.id::text, 1, 6)
-  )                                              AS entry_number,
+  je.reference                                   AS entry_number,
   fp.id                                          AS financial_period_id,
   je.entry_date::text                            AS entry_date,
   je.status::text                                AS status,

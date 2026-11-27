@@ -29,42 +29,42 @@ const NAV: NavItem[] = [
   {
     group: "Pilotage",
     items: [
-      { to: "/",           icon: LayoutDashboard, label: "Tableau de bord", perm: "biz.dashboard.read" },
-      { to: "/mon-activite", icon: TrendingUp,   label: "Mon activité" },
+      { to: "/",             icon: LayoutDashboard, label: "Tableau de bord" },
+      { to: "/mon-activite", icon: TrendingUp,      label: "Mon activité" },
     ],
   },
   {
     group: "Clients & Commandes",
     items: [
-      { to: "/clients",      icon: Users,        label: "Clients",      perm: "biz.customers.read" },
-      { to: "/fournisseurs", icon: Truck,        label: "Fournisseurs", perm: "biz.suppliers.read" },
-      { to: "/commandes",    icon: ShoppingCart, label: "Commandes",    perm: "biz.orders.read" },
-      { to: "/devis",        icon: BarChart3,    label: "Devis",        perm: "biz.quotes.manage" },
+      { to: "/clients",      icon: Users,        label: "Clients",      perm: "contacts.read" },
+      { to: "/fournisseurs", icon: Truck,        label: "Fournisseurs", perm: "contacts.read" },
+      { to: "/commandes",    icon: ShoppingCart, label: "Commandes",    perm: "orders.read" },
+      { to: "/devis",        icon: BarChart3,    label: "Devis",        perm: "orders.write" },
     ],
   },
   {
     group: "Production",
     items: [
-      { to: "/impression", icon: Printer,        label: "Impression", perm: "biz.printing.queue" },
-      { to: "/secretariat",icon: Code2,          label: "Secrétariat",perm: "biz.documents.read" },
+      { to: "/impression", icon: Printer, label: "Impression",  perm: "orders.write" },
+      { to: "/secretariat",icon: Code2,   label: "Secrétariat", perm: "orders.read" },
     ],
   },
   {
     group: "Ventes & Stocks",
     items: [
-      { to: "/vente",      icon: Store,          label: "Point de vente", perm: "biz.sales.create" },
-      { to: "/produits",   icon: ShoppingCart,   label: "Produits",   perm: "biz.catalog.read" },
-      { to: "/stocks",     icon: BarChart3,      label: "Stocks",     perm: "biz.inventory.read" },
-      { to: "/historique-ventes", icon: History, label: "Historique ventes", perm: "biz.sales.read" },
+      { to: "/vente",              icon: Store,        label: "Point de vente",    perm: "orders.write" },
+      { to: "/produits",           icon: ShoppingCart, label: "Produits",          perm: "products.read" },
+      { to: "/stocks",             icon: BarChart3,    label: "Stocks",            perm: "products.read" },
+      { to: "/historique-ventes",  icon: History,      label: "Historique ventes", perm: "orders.read" },
     ],
   },
   {
     group: "Mobile Money",
     items: [
-      { to: "/mobile-money", icon: Smartphone,   label: "Mobile Money", perm: "momo.transactions.read" },
-      { to: "/caisse",       icon: Banknote,     label: "Caisse",       perm: "biz.cash.operate" },
-      { to: "/caisse/historique", icon: History, label: "Historique caisse", perm: "biz.cash.operate" },
-      { to: "/comptes",      icon: TrendingUp,   label: "Comptes",      perm: "biz.cash.operate" },
+      { to: "/mobile-money",       icon: Smartphone, label: "Mobile Money",     perm: "momo.read" },
+      { to: "/caisse",             icon: Banknote,   label: "Caisse",           perm: "cash.write" },
+      { to: "/caisse/historique",  icon: History,    label: "Historique caisse",perm: "cash.read" },
+      { to: "/comptes",            icon: TrendingUp, label: "Comptes",          perm: "cash.read" },
     ],
   },
   {
@@ -74,37 +74,37 @@ const NAV: NavItem[] = [
       {
         subGroup: "Pilotage",
         items: [
-          { to: "/finance/marges",            icon: TrendingUp,  label: "Marges" },
-          { to: "/finance/commissions",        icon: Zap,         label: "Commissions" },
-          { to: "/finance/rentabilite",        icon: Target,      label: "Rentabilité" },
-          { to: "/finance/rapports-financiers",icon: Download,    label: "Rapports" },
+          { to: "/finance/marges",             icon: TrendingUp, label: "Marges" },
+          { to: "/finance/commissions",        icon: Zap,        label: "Commissions" },
+          { to: "/finance/rentabilite",        icon: Target,     label: "Rentabilité" },
+          { to: "/finance/rapports-financiers",icon: Download,   label: "Rapports" },
         ],
       },
       {
         subGroup: "Trésorerie",
         items: [
-          { to: "/finance/tresorerie",   icon: Wallet,   label: "Trésorerie & comptes" },
-          { to: "/finance/depenses",     icon: Banknote, label: "Dépenses",    perm: "biz.expenses.create" },
-          { to: "/finance/encaissements",icon: TrendingUp,label: "Encaissements",perm: "biz.payments.record" },
-          { to: "/finance/factures",     icon: FileText, label: "Factures",    perm: "biz.invoices.read" },
-          { to: "/finance/journal",      icon: BookOpen, label: "Journal comptable" },
-          { to: "/finance/cloture",      icon: Lock,     label: "Clôtures" },
+          { to: "/finance/tresorerie",   icon: Wallet,    label: "Trésorerie & comptes" },
+          { to: "/finance/depenses",     icon: Banknote,  label: "Dépenses",        perm: "expenses.write" },
+          { to: "/finance/encaissements",icon: TrendingUp,label: "Encaissements",   perm: "cash.write" },
+          { to: "/finance/factures",     icon: FileText,  label: "Factures",        perm: "invoices.read" },
+          { to: "/finance/journal",      icon: BookOpen,  label: "Journal comptable" },
+          { to: "/finance/cloture",      icon: Lock,      label: "Clôtures" },
         ],
       },
       {
         subGroup: "Capital & actifs",
         items: [
-          { to: "/finance/capital",        icon: TrendingUp,  label: "Capital" },
-          { to: "/finance/reserves",       icon: PiggyBank,   label: "Réserves" },
-          { to: "/finance/immobilisations",icon: Building2,   label: "Immobilisations" },
-          { to: "/finance/amortissements", icon: Calendar,    label: "Amortissements" },
-          { to: "/finance/emprunts",       icon: Banknote,    label: "Emprunts" },
+          { to: "/finance/capital",        icon: TrendingUp, label: "Capital" },
+          { to: "/finance/reserves",       icon: PiggyBank,  label: "Réserves" },
+          { to: "/finance/immobilisations",icon: Building2,  label: "Immobilisations" },
+          { to: "/finance/amortissements", icon: Calendar,   label: "Amortissements" },
+          { to: "/finance/emprunts",       icon: Banknote,   label: "Emprunts" },
         ],
       },
       {
         subGroup: "Config",
         items: [
-          { to: "/finance/parametres-finance", icon: Settings, label: "Paramètres" },
+          { to: "/finance/parametres-finance", icon: Settings, label: "Paramètres", perm: "settings.write" },
         ],
       },
     ],
@@ -112,26 +112,26 @@ const NAV: NavItem[] = [
   {
     group: "Formation",
     items: [
-      { to: "/formations", icon: GraduationCap, label: "Formations", perm: "biz.training.read" },
+      { to: "/formations", icon: GraduationCap, label: "Formations", perm: "trainings.read" },
     ],
   },
   {
     group: "Projets",
     items: [
-      { to: "/projets",    icon: Code2,         label: "Projets numériques", perm: "biz.projects.read" },
-      { to: "/abonnements",icon: Banknote,      label: "Abonnements",        perm: "biz.subscriptions.manage" },
+      { to: "/projets",    icon: Code2,    label: "Projets numériques", perm: "projects.read" },
+      { to: "/abonnements",icon: Banknote, label: "Abonnements",        perm: "orders.write" },
     ],
   },
   {
     group: "Réunions IA",
     items: [
-      { to: "/reunions",   icon: VideoIcon,     label: "Réunions", perm: "meet.meetings.read" },
+      { to: "/reunions", icon: VideoIcon, label: "Réunions" },
     ],
   },
   {
     group: "Rapports",
     items: [
-      { to: "/rapports",   icon: BarChart3,     label: "Rapports", perm: "biz.reports.read" },
+      { to: "/rapports", icon: BarChart3, label: "Rapports", perm: "reports.read" },
     ],
   },
 ];
