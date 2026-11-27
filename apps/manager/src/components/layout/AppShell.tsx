@@ -5,14 +5,15 @@ import {
   Banknote, Smartphone, TrendingUp, GraduationCap, Code2,
   VideoIcon, BarChart3, Menu, X, LogOut, Search, Plus,
   ChevronDown, ChevronRight, Wifi, WifiOff, Settings, UserCircle, Truck, History,
-  FileText, PiggyBank, Building2, Calendar, BookOpen, Lock, Download, Target, Zap, Wallet
+  FileText, PiggyBank, Building2, Calendar, BookOpen, Lock, Download, Target, Zap, Wallet,
+  type LucideIcon,
 } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../hooks/useAuth";
 import { useNotifications } from "../../hooks/useNotifications";
 import { NotificationPanel } from "../ui/NotificationPanel";
 
-type NavLeaf = { to: string; icon: React.ComponentType<{ className?: string }>; label: string; perm?: string };
+type NavLeaf = { to: string; icon: LucideIcon; label: string; perm?: string };
 type NavSubGroup = { subGroup: string; items: NavLeaf[] };
 
 interface NavItem {
