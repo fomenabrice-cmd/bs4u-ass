@@ -1,0 +1,127 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =====================================================================
+   Variables CSS — Design tokens BS4U
+   ===================================================================== */
+:root {
+  /* Couleurs de marque */
+  --color-brand-emerald:    #075B32;
+  --color-brand-deep:       #063A22;
+  --color-brand-gold:       #D6A52B;
+  --color-brand-gold-light: #F2D477;
+  --color-brand-gold-text:  #7A5A0E;
+
+  /* Surfaces */
+  --color-surface-white:        #FFFFFF;
+  --color-surface-soft:         #F5F7F5;
+  --color-surface-emerald-tint: #E8F3EC;
+
+  /* Texte */
+  --color-text-primary: #17231C;
+  --color-text-muted:   #66736A;
+
+  /* Bordures */
+  --color-border-subtle: #E2E8E3;
+
+  /* États */
+  --color-success: #067647;
+  --color-warning: #B54708;
+  --color-danger:  #B42318;
+  --color-info:    #175CD3;
+
+  /* Opérateurs */
+  --color-operator-orange: #FF7900;
+  --color-operator-mtn:    #FFCC00;
+}
+
+/* Mode sombre */
+.dark {
+  --color-surface-white:        #0B1410;
+  --color-surface-soft:         #111C17;
+  --color-surface-emerald-tint: #0D2419;
+  --color-text-primary:         #E6EDE8;
+  --color-text-muted:           #9AA79F;
+  --color-brand-emerald:        #3FB27F;
+  --color-border-subtle:        #1E3027;
+}
+
+/* =====================================================================
+   Base
+   ===================================================================== */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  background-color: var(--color-surface-soft);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Les inputs héritent sinon la couleur du body — forcer texte foncé sur fond blanc */
+input, select, textarea {
+  color: #17231C;
+  background-color: #FFFFFF;
+}
+
+.dark input, .dark select, .dark textarea {
+  color: #17231C;
+  background-color: #FFFFFF;
+}
+
+/* Focus visible — anneau émeraude/or selon fond */
+:focus-visible {
+  outline: 2px solid var(--color-brand-emerald);
+  outline-offset: 2px;
+}
+
+.dark :focus-visible {
+  outline-color: var(--color-brand-gold-light);
+}
+
+/* Montants tabulaires */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* =====================================================================
+   Impression (tickets 80 mm, documents A4)
+   ===================================================================== */
+@media print {
+  .no-print { display: none !important; }
+
+  .ticket-80mm {
+    width: 80mm;
+    font-size: 10pt;
+    font-family: "Courier New", monospace;
+  }
+}
+
+/* =====================================================================
+   Animation (respecter prefers-reduced-motion)
+   ===================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* =====================================================================
+   Scrollbar personnalisée (Chrome/Edge)
+   ===================================================================== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--color-border-subtle);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}

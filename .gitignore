@@ -1,0 +1,56 @@
+# Dépendances
+node_modules/
+.pnpm-store/
+
+# Build
+dist/
+build/
+.next/
+.turbo/
+out/
+
+# Variables d'environnement (JAMAIS committer)
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# Supabase local
+backend/supabase/.branches/
+backend/supabase/.temp/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Tests
+coverage/
+playwright-report/
+test-results/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# Claude Code sessions
+.claude/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# TypeScript
+*.tsbuildinfo
+
+# Secrets — sécurité (gitleaks)
+*.pem
+*.key
+*.p12
+*secrets*
+*credentials*

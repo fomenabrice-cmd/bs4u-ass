@@ -1,0 +1,12 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-brand:    #075B32;
+  --color-deep:     #063A22;
+  --color-gold:     #D6A52B;
+  --color-goldtext: #7A5A0E;
+  color-scheme: dark;
+}
+body { background: var(--color-deep); color: #E2E8E3; }
