@@ -13,7 +13,7 @@ import { useAuth } from "../../hooks/useAuth";
 import { useNotifications } from "../../hooks/useNotifications";
 import { NotificationPanel } from "../ui/NotificationPanel";
 
-type NavLeaf = { to: string; icon: LucideIcon; label: string; perm?: string };
+type NavLeaf = { to: string; icon: LucideIcon; label: string; perm?: string; end?: boolean };
 type NavSubGroup = { subGroup: string; items: NavLeaf[] };
 
 interface NavItem {
@@ -62,7 +62,7 @@ const NAV: NavItem[] = [
     group: "Mobile Money",
     items: [
       { to: "/mobile-money",       icon: Smartphone, label: "Mobile Money",     perm: "momo.read" },
-      { to: "/caisse",             icon: Banknote,   label: "Caisse",           perm: "cash.write" },
+      { to: "/caisse",             icon: Banknote,   label: "Caisse",           perm: "cash.write", end: true },
       { to: "/caisse/historique",  icon: History,    label: "Historique caisse",perm: "cash.read" },
       { to: "/comptes",            icon: TrendingUp, label: "Comptes",          perm: "cash.read" },
     ],
@@ -192,6 +192,7 @@ function NavSubGroupSection({
 
 export function AppShell() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [searchOpen, setSearchOpen] = useState(false);
   const [newMenuOpen, setNewMenuOpen] = useState(false);
@@ -204,6 +205,9 @@ export function AppShell() {
   const location = useLocation();
   const { session, demoUser } = useAuth();
   const { notifications, unreadCount, loading: notifLoading, markAsRead, markAllAsRead } = useNotifications();
+
+  // Fermer le drawer mobile à chaque navigation
+  useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 
   // Réseau : réactif aux événements réels
   useEffect(() => {
@@ -291,10 +295,20 @@ export function AppShell() {
       )}
 
       {/* ===== SIDEBAR ===== */}
+      {/* Overlay mobile */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/50 md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
+      )}
       <aside
-        className={`flex flex-col h-full bg-[#063A22] transition-all duration-200 shrink-0 ${
-          sidebarOpen ? "w-64" : "w-16"
-        }`}
+        className={`flex flex-col h-full bg-[#063A22] transition-all duration-200 shrink-0
+          fixed inset-y-0 left-0 z-40 w-64
+          md:relative md:inset-auto md:z-auto
+          ${sidebarOpen ? "md:w-64" : "md:w-16"}
+          ${mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
+        `}
       >
         {/* Logo + toggle */}
         <div className="flex items-center justify-between p-4 border-b border-[#0a4f2d]">
@@ -355,7 +369,7 @@ export function AppShell() {
                     <NavLink
                       key={leaf.to}
                       to={leaf.to}
-                      end={leaf.to === "/"}
+                      end={leaf.to === "/" || !!leaf.end}
                       className={({ isActive }) =>
                         `relative flex items-center gap-3 px-4 py-2 mx-2 rounded-lg text-sm transition-colors ${
                           isActive
@@ -404,6 +418,15 @@ export function AppShell() {
       <div className="flex flex-col flex-1 overflow-hidden">
         {/* Header */}
         <header className="h-16 bg-white border-b border-[#E2E8E3] flex items-center justify-between px-4 shrink-0 shadow-xs">
+          {/* Hamburger mobile */}
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="md:hidden mr-2 p-2 rounded-lg text-[#66736A] hover:bg-[#F5F7F5] transition-colors"
+            aria-label="Ouvrir le menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+
           {/* Recherche globale */}
           <button
             onClick={() => setSearchOpen(true)}

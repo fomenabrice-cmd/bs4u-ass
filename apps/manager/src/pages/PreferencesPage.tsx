@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import {
   Users, Banknote, Smartphone, Clock, Plus, Edit2, Save,
   X, Check, Loader2, ChevronDown, AlertCircle, Trash2,
@@ -1471,7 +1472,8 @@ function AgenceTab({ orgId }: { orgId: string }) {
 
 export function PreferencesPage() {
   const { session } = useAuth();
-  const [activeTab, setActiveTab] = useState<TabKey>("membres");
+  const { state } = useLocation();
+  const [activeTab, setActiveTab] = useState<TabKey>((state as { tab?: TabKey } | null)?.tab ?? "membres");
   const [orgId, setOrgId] = useState<string | null>(null);
   const [loadingOrg, setLoadingOrg] = useState(true);
 

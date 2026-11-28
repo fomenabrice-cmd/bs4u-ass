@@ -433,7 +433,10 @@ export function CashSession() {
               {session.register_name} — ouverte
             </span>
           ) : registers.length === 0 ? (
-            <span className="text-xs text-[#B42318] bg-red-50 px-3 py-1.5 rounded-lg">Aucune caisse configurée</span>
+            <Link to="/parametres-locaux" state={{ tab: "caisses" }}
+              className="flex items-center gap-1.5 bg-[#075B32] text-white text-sm px-3 py-1.5 rounded-lg hover:bg-[#063A22] transition-colors">
+              <Plus className="w-3.5 h-3.5" /> Configurer une caisse
+            </Link>
           ) : (
             <button onClick={() => openModal("open")}
               className="flex items-center gap-1.5 bg-[#075B32] text-white text-sm px-3 py-1.5 rounded-lg hover:bg-[#063A22] transition-colors">

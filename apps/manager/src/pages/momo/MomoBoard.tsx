@@ -621,7 +621,11 @@ export function MomoBoard() {
       <div className="p-6 max-w-2xl mx-auto py-20 text-center">
         <Smartphone className="w-12 h-12 mx-auto mb-3 text-[#E2E8E3]" />
         <p className="text-sm font-medium text-[#17231C] mb-1">Aucun compte Mobile Money configuré</p>
-        <p className="text-sm text-[#66736A]">Créez un compte dans Préférences → Mobile Money.</p>
+        <p className="text-sm text-[#66736A] mb-4">Créez un compte dans Préférences → Mobile Money.</p>
+        <Link to="/parametres-locaux" state={{ tab: "momo" }}
+          className="inline-flex items-center gap-2 bg-[#075B32] text-white text-sm px-4 py-2 rounded-lg hover:bg-[#063A22] transition-colors">
+          <Smartphone className="w-4 h-4" /> Configurer Mobile Money
+        </Link>
       </div>
     );
   }
